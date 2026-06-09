@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --green: #3fb950;
+      --orange: #f78166;
+      --purple: #bc8cff;
+      --cyan: #79c0ff;
+      --yellow: #d29922;
+      --glow-blue: rgba(88,166,255,0.15);
+      --glow-green: rgba(63,185,80,0.15);
+      --glow-purple: rgba(188,140,255,0.15);
+      --glow-orange: rgba(247,129,102,0.15);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .nav { display: flex; gap: 8px; }
+    .nav-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); padding: 6px 14px;
+      border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; transition: all 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--surface2); color: var(--text);
+      border-color: var(--blue);
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.6; transform: scale(1.3); }
+    }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    }
+
+    /* ── Layout ── */
+    main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+    .page-title {
+      font-size: 1.6rem; font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .page-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+    }
+
+    .kpi-card.blue::before  { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+    .kpi-card.green::before { background: linear-gradient(90deg, var(--green), #56d364); }
+    .kpi-card.purple::before{ background: linear-gradient(90deg, var(--purple), #d2a8ff); }
+    .kpi-card.orange::before{ background: linear-gradient(90deg, var(--orange), #ffa657); }
+
+    .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .kpi-label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-icon { font-size: 1.4rem; opacity: 0.8; }
+
+    .kpi-value {
+      font-size: 2.2rem; font-weight: 800;
+      margin: 10px 0 4px;
+      letter-spacing: -1px;
+    }
+
+    .kpi-change {
+      font-size: 0.8rem;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kpi-change.up   { color: var(--green); }
+    .kpi-change.down { color: var(--orange); }
+
+    .kpi-sparkline {
+      height: 40px; margin-top: 12px;
+    }
+
+    /* ── Charts Row ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 0.95rem; font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 16px; }
+
+    /* ── Bar Chart ── */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 160px;
+    }
+
+    .bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-wrap { width: 100%; display: flex; gap: 3px; align-items: flex-end; height: 130px; }
+
+    .bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      transition: opacity 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    .bar:hover { opacity: 0.75; }
+    .bar:hover::after {
+      content: attr(data-val);
+      position: absolute;
+      top: -22px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .bar.primary { background: linear-gradient(to top, var(--blue), #79c0ff); }
+    .bar.secondary { background: linear-gradient(to top, var(--purple), #d2a8ff); }
+
+    .bar-label { font-size: 0.7rem; color: var(--muted); }
+
+    /* ── Donut ── */
+    .donut-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .donut-svg { width: 150px; height: 150px; }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+      width: 100%;
+    }
+
+    .legend-item {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.8rem;
+    }
+
+    .legend-left { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-val { color: var(--muted); }
+
+    /* ── Bottom Row ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th {
+      text-align: right;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    tbody tr {
+      transition: background 0.15s;
+      cursor: default;
+    }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+    }
+
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge.active   { background: rgba(63,185,80,0.15);  color: var(--green);  }
+    .badge.pending  { background: rgba(210,153,34,0.15);  color: var(--yellow); }
+    .badge.inactive { background: rgba(139,148,158,0.1); color: var(--muted);  }
+
+    .progress-bar-wrap {
+      background: var(--surface2);
+      border-radius: 4px;
+      height: 6px;
+      width: 80px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+    }
+
+    /* ── Activity Feed ── */
+    .activity-feed { display: flex; flex-direction: column; gap: 12px; }
+
+    .activity-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      cursor: default;
+    }
+    .activity-item:hover { background: var(--surface2); }
+
+    .activity-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; flex-shrink: 0;
+    }
+
+    .activity-body { flex: 1; }
+    .activity-text { font-size: 0.85rem; line-height: 1.4; }
+    .activity-text strong { color: var(--cyan); }
+    .activity-time { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Line Chart ── */
+    .line-svg { width: 100%; height: 140px; }
+
+    /* ── Animated counter ── */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .kpi-value { animation: countUp 0.6s ease both; }
+    .kpi-card:nth-child(1) .kpi-value { animation-delay: 0.1s; }
+    .kpi-card:nth-child(2) .kpi-value { animation-delay: 0.2s; }
+    .kpi-card:nth-child(3) .kpi-value { animation-delay: 0.3s; }
+    .kpi-card:nth-child(4) .kpi-value { animation-delay: 0.4s; }
+
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-row, .bottom-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    NexusBoard
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active">סקירה</button>
+    <button class="nav-btn">אנליטיקה</button>
+    <button class="nav-btn">משתמשים</button>
+    <button class="nav-btn">הגדרות</button>
+  </nav>
+
+  <div class="header-right">
+    <div class="status-dot" title="כל המערכות תקינות"></div>
+    <span style="font-size:0.8rem;color:var(--muted)">כל המערכות תקינות</span>
+    <div class="avatar">EH</div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <div class="page-title">לוח הבקרה</div>
+  <div class="page-sub">יוני 2026 · עדכון אחרון: עכשיו</div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card blue">
+      <div class="kpi-header">
+        <span class="kpi-label">הכנסה חודשית</span>
+        <span class="kpi-icon">💰</span>
+      </div>
+      <div class="kpi-value" id="kpi1">₪0</div>
+      <div class="kpi-change up">▲ 12.4% לעומת החודש שעבר</div>
+      <svg class="kpi-sparkline" viewBox="0 0 120 40">
+        <polyline points="0,35 15,28 30,22 45,25 60,15 75,18 90,10 105,6 120,4"
+          fill="none" stroke="#58a6ff" stroke-width="2" opacity="0.8"/>
+        <polyline points="0,35 15,28 30,22 45,25 60,15 75,18 90,10 105,6 120,4 120,40 0,40"
+          fill="url(#blueGrad)" stroke="none"/>
+        <defs>
+          <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#58a6ff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="kpi-card green">
+      <div class="kpi-header">
+        <span class="kpi-label">משתמשים פעילים</span>
+        <span class="kpi-icon">👥</span>
+      </div>
+      <div class="kpi-value" id="kpi2">0</div>
+      <div class="kpi-change up">▲ 8.1% לעומת השבוע שעבר</div>
+      <svg class="kpi-sparkline" viewBox="0 0 120 40">
+        <polyline points="0,30 15,26 30,28 45,20 60,18 75,14 90,12 105,8 120,5"
+          fill="none" stroke="#3fb950" stroke-width="2" opacity="0.8"/>
+        <polyline points="0,30 15,26 30,28 45,20 60,18 75,14 90,12 105,8 120,5 120,40 0,40"
+          fill="url(#greenGrad)" stroke="none"/>
+        <defs>
+          <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3fb950" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#3fb950" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="kpi-card purple">
+      <div class="kpi-header">
+        <span class="kpi-label">המרות</span>
+        <span class="kpi-icon">🎯</span>
+      </div>
+      <div class="kpi-value" id="kpi3">0%</div>
+      <div class="kpi-change down">▼ 2.3% לעומת החודש שעבר</div>
+      <svg class="kpi-sparkline" viewBox="0 0 120 40">
+        <polyline points="0,10 15,14 30,12 45,18 60,16 75,20 90,22 105,19 120,24"
+          fill="none" stroke="#bc8cff" stroke-width="2" opacity="0.8"/>
+        <polyline points="0,10 15,14 30,12 45,18 60,16 75,20 90,22 105,19 120,24 120,40 0,40"
+          fill="url(#purpGrad)" stroke="none"/>
+        <defs>
+          <linearGradient id="purpGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#bc8cff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="kpi-card orange">
+      <div class="kpi-header">
+        <span class="kpi-label">פניות פתוחות</span>
+        <span class="kpi-icon">🎫</span>
+      </div>
+      <div class="kpi-value" id="kpi4">0</div>
+      <div class="kpi-change up">▲ 3 חדשות היום</div>
+      <svg class="kpi-sparkline" viewBox="0 0 120 40">
+        <polyline points="0,8 15,12 30,9 45,15 60,18 75,14 90,20 105,22 120,18"
+          fill="none" stroke="#f78166" stroke-width="2" opacity="0.8"/>
+        <polyline points="0,8 15,12 30,9 45,15 60,18 75,14 90,20 105,22 120,18 120,40 0,40"
+          fill="url(#orangeGrad)" stroke="none"/>
+        <defs>
+          <linearGradient id="orangeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f78166" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#f78166" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+
+    <!-- Bar + Line Chart -->
+    <div class="card">
+      <div class="card-title">הכנסות לפי חודש</div>
+      <div class="card-sub">שישה חודשים אחרונים · עמודות=הכנסה, קו=יעד</div>
+
+      <svg id="lineChart" class="line-svg" viewBox="0 0 560 140" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#58a6ff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Grid lines -->
+        <line x1="0" y1="20"  x2="560" y2="20"  stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="50"  x2="560" y2="50"  stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="80"  x2="560" y2="80"  stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="110" x2="560" y2="110" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Bars -->
+        <rect x="20"  y="90" width="60" height="50" rx="4" fill="url(#barBlue)" />
+        <rect x="110" y="70" width="60" height="70" rx="4" fill="url(#barBlue)" />
+        <rect x="200" y="55" width="60" height="85" rx="4" fill="url(#barBlue)" />
+        <rect x="290" y="40" width="60" height="100" rx="4" fill="url(#barBlue)" />
+        <rect x="380" y="30" width="60" height="110" rx="4" fill="url(#barBlue)" />
+        <rect x="470" y="15" width="60" height="125" rx="4" fill="url(#barBlue)" />
+        <!-- Target line -->
+        <polyline points="50,80 140,65 230,52 320,42 410,32 500,22"
+          fill="none" stroke="#bc8cff" stroke-width="2" stroke-dasharray="6,3" opacity="0.8"/>
+        <!-- Dots on line -->
+        <circle cx="50"  cy="80" r="4" fill="#bc8cff"/>
+        <circle cx="140" cy="65" r="4" fill="#bc8cff"/>
+        <circle cx="230" cy="52" r="4" fill="#bc8cff"/>
+        <circle cx="320" cy="42" r="4" fill="#bc8cff"/>
+        <circle cx="410" cy="32" r="4" fill="#bc8cff"/>
+        <circle cx="500" cy="22" r="4" fill="#bc8cff"/>
+        <!-- X labels -->
+        <text x="50"  y="136" fill="#8b949e" font-size="11" text-anchor="middle">ינו</text>
+        <text x="140" y="136" fill="#8b949e" font-size="11" text-anchor="middle">פבר</text>
+        <text x="230" y="136" fill="#8b949e" font-size="11" text-anchor="middle">מרץ</text>
+        <text x="320" y="136" fill="#8b949e" font-size="11" text-anchor="middle">אפר</text>
+        <text x="410" y="136" fill="#8b949e" font-size="11" text-anchor="middle">מאי</text>
+        <text x="500" y="136" fill="#8b949e" font-size="11" text-anchor="middle">יוני</text>
+        <defs>
+          <linearGradient id="barBlue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#79c0ff" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#1f6feb" stop-opacity="0.5"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:0.75rem">
+        <span style="display:flex;align-items:center;gap:6px;color:var(--muted)">
+          <span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(#79c0ff,#1f6feb);display:inline-block"></span>הכנסה
+        </span>
+        <span style="display:flex;align-items:center;gap:6px;color:var(--muted)">
+          <span style="width:16px;height:2px;background:var(--purple);display:inline-block"></span>יעד
+        </span>
+      </div>
+    </div>
+
+    <!-- Donut -->
+    <div class="card">
+      <div class="card-title">פילוח תנועה</div>
+      <div class="card-sub">לפי ערוץ רכישה</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#21262d" stroke-width="3.8"/>
+          <!-- 40% blue -->
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#58a6ff" stroke-width="3.8"
+            stroke-dasharray="40 60" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
+          <!-- 28% purple -->
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#bc8cff" stroke-width="3.8"
+            stroke-dasharray="28 72" stroke-dashoffset="-15" transform="rotate(-90 18 18)"/>
+          <!-- 18% green -->
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3fb950" stroke-width="3.8"
+            stroke-dasharray="18 82" stroke-dashoffset="-43" transform="rotate(-90 18 18)"/>
+          <!-- 14% orange -->
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f78166" stroke-width="3.8"
+            stroke-dasharray="14 86" stroke-dashoffset="-61" transform="rotate(-90 18 18)"/>
+          <text x="18" y="20" text-anchor="middle" font-size="5" fill="#e6edf3" font-weight="700">100%</text>
+        </svg>
+
+        <div class="donut-legend">
+          <div class="legend-item">
+            <div class="legend-left">
+              <div class="legend-dot" style="background:#58a6ff"></div>
+              <span>חיפוש אורגני</span>
+            </div>
+            <span class="legend-val">40%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-left">
+              <div class="legend-dot" style="background:#bc8cff"></div>
+              <span>רשתות חברתיות</span>
+            </div>
+            <span class="legend-val">28%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-left">
+              <div class="legend-dot" style="background:#3fb950"></div>
+              <span>ישיר</span>
+            </div>
+            <span class="legend-val">18%</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-left">
+              <div class="legend-dot" style="background:#f78166"></div>
+              <span>פרסום ממומן</span>
+            </div>
+            <span class="legend-val">14%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="bottom-row">
+
+    <!-- Users Table -->
+    <div class="card">
+      <div class="card-title">לקוחות מובילים</div>
+      <div class="card-sub">לפי ערך חודשי</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>לקוח</th>
+              <th>סטטוס</th>
+              <th>ערך חודשי</th>
+              <th>שימוש</th>
+            </tr>
+          </thead>
+          <tbody id="userTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="card">
+      <div class="card-title">פעילות אחרונה</div>
+      <div class="card-sub">עדכונים בזמן אמת</div>
+      <div class="activity-feed" id="activityFeed"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* ── Animated counters ── */
+function animateCount(el, target, prefix='', suffix='', duration=1400) {
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = Math.round(ease * target);
+    el.textContent = prefix + val.toLocaleString('he-IL') + suffix;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+window.addEventListener('load', () => {
+  animateCount(document.getElementById('kpi1'), 847320, '₪');
+  animateCount(document.getElementById('kpi2'), 12847);
+  animateCount(document.getElementById('kpi3'), 6, '', '%');
+  animateCount(document.getElementById('kpi4'), 38);
+});
+
+/* ── Nav toggle ── */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ── Users Table ── */
+const users = [
+  { name: 'טכנולוגיות אלפא', initials: 'טא', color: '#58a6ff', status: 'active',  mrr: 18400, usage: 92 },
+  { name: 'בטא סולושנס',     initials: 'בס', color: '#bc8cff', status: 'active',  mrr: 14200, usage: 78 },
+  { name: 'גמא דיגיטל',      initials: 'גד', color: '#3fb950', status: 'pending', mrr: 9800,  usage: 54 },
+  { name: 'דלתא ונצ\'רס',    initials: 'דו', color: '#f78166', status: 'active',  mrr: 7350,  usage: 41 },
+  { name: 'אפסילון טק',       initials: 'אט', color: '#d29922', status: 'inactive',mrr: 3200,  usage: 18 },
+];
+
+const tbody = document.getElementById('userTable');
+users.forEach(u => {
+  const statusMap = { active: ['active','פעיל'], pending: ['pending','ממתין'], inactive: ['inactive','לא פעיל'] };
+  const [cls, label] = statusMap[u.status];
+  tbody.innerHTML += `
+    <tr>
+      <td><div class="user-cell">
+        <div class="user-avatar" style="background:${u.color}22;color:${u.color}">${u.initials}</div>
+        <span>${u.name}</span>
+      </div></td>
+      <td><span class="badge ${cls}">${label}</span></td>
+      <td>₪${u.mrr.toLocaleString('he-IL')}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${u.usage}%"></div>
+          </div>
+          <span style="font-size:0.75rem;color:var(--muted)">${u.usage}%</span>
+        </div>
+      </td>
+    </tr>`;
+});
+
+/* ── Activity Feed ── */
+const activities = [
+  { icon: '🚀', bg: 'rgba(88,166,255,0.15)', text: '<strong>גרסה 3.2.1</strong> הועלתה בהצלחה לייצור', time: 'לפני 2 דקות' },
+  { icon: '👤', bg: 'rgba(63,185,80,0.15)',  text: 'לקוח חדש <strong>טכנולוגיות אלפא</strong> נרשם', time: 'לפני 14 דקות' },
+  { icon: '⚠️', bg: 'rgba(247,129,102,0.15)',text: 'עומס גבוה זוהה בשרת <strong>EU-West-1</strong>', time: 'לפני 31 דקות' },
+  { icon: '💳', bg: 'rgba(188,140,255,0.15)',text: 'תשלום של <strong>₪18,400</strong> התקבל', time: 'לפני שעה' },
+  { icon: '📊', bg: 'rgba(210,153,34,0.15)', text: 'דוח חודשי יוני <strong>מוכן להורדה</strong>', time: 'לפני שעתיים' },
+];
+
+const feed = document.getElementById('activityFeed');
+activities.forEach(a => {
+  feed.innerHTML += `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${a.bg}">${a.icon}</div>
+      <div class="activity-body">
+        <div class="activity-text">${a.text}</div>
+        <div class="activity-time">${a.time}</div>
+      </div>
+    </div>`;
+});
+
+/* ── Live clock in subtitle ── */
+function updateTime() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.querySelector('.page-sub').textContent = `יוני 2026 · עדכון אחרון: ${t}`;
+}
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+</body>
+</html>
